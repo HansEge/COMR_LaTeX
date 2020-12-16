@@ -7,6 +7,7 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{cleveref}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -73,38 +74,31 @@ One task for this project is to navigate to the four goals with a set yaw angle,
 
 \section{Results and discussion}
 
-To confirm that the control software works as intended the UAV has been observed through the program \textit{rviz}. This program makes it possible to visualize what the different sensors on the UAV sees. On figure \ref{fig:rviz} the odometry data can be seen in rviz. The red arrows indicate the heading of the robot and is plottet where ever the robot is in space. It can be seen that the UAV goes to the four goal coordinates. However there is a large amount of overshoot. The four coordinates are: (0,0,2), (0,6,2), (6,6,2) and (6,0,2).
+
+\subsection{Simulation results}
+To verify that the controller behaves as expected and to ensure that the drone will not crash when testing in real life, the controller has been tested in simulation first. The behaviour should be more or less the same when testing in a real world scenario. The simulation tests covers both the hovering and waypoint scenario however, only the waypoint scenario will be shown in this report. The drone used for the simulation as well as in the real world is the Parrot bebop2 UAV.
+
+The controller coefficients are set to: Kp = 0.1, Ki = 0.01 and Kd = 0.1 as these values resulted in a reasonably quick and stable controller. On \cref{fig:sim_pos} the x, y and z position of the drone can be seen. It shows nicely how the drone goes to each waypoint in a controlled manner with a acceptable level of overshoot.  
 
 \begin{figure}[hbtp]
 	\centering
-	\includegraphics[width=1.0\linewidth]{images/rviz_hw3.pdf}
-	\caption{Odemetry visualized through rviz}
-	\label{fig:rviz}
+	\includegraphics[width=1.0\linewidth]{images/task2_sim_pos.png}
+	\caption{x, y and z coordinates of the drone in simulation. (Kp = 0.1, Ki = 0.01, Kd = 0.1)}
+	\label{fig:sim_pos}
 \end{figure}
 
+Another way to visualize the simulation is using the program rviz which makes is possible to display the orientation as well as the position in 3D space. This can be seen on \cref{fig:sim_rviz}. On this figure it is also apparent that the yaw angle is constant for the drone at all times. 
+After verifying that the drone is flying as intended in simulation real world testing can begin.
 
 \begin{figure}[hbtp]
 	\centering
-	\includegraphics[width=1.0\linewidth]{images/xyz_over_time.pdf}
-	\caption{x, y and z coordinates over time}
-	\label{fig:xyz_over_time}
-\end{figure}
-\newpage
-The overshoot can also be seen on figure \ref{fig:xyz_over_time}. Here there are three line: blue, red and green which each represents either x, y or z coordinates. The overshoot is directly controlled by the constant kp and can be lowered by lowering the value of kp, though this will also make the UAV slower, so there are pros and cons to consider when choosing kp. Here it is set to 0.1. 
-
-
-The error or the distance to the target over time can be seen below on figure \ref{fig:error_to_target}. Here it can be seen that whenever the UAV reaches its goal there is a huge spike in error as the currently active goal is changed to the next goal. The overshoot is also visible in between the high narrow peaks. 
-
-
-\begin{figure}[hbtp]
-	\centering
-	\includegraphics[width=1.0\linewidth]{images/error_to_target.pdf}
-	\caption{Distance to target over time}
-	\label{fig:error_to_target}
+	\includegraphics[width=1.0\linewidth]{images/task2_sim_rviz.png}
+	\caption{x, y and z coordinates of the drone in simulation. (Kp = 0.1, Ki = 0.01, Kd = 0.1)}
+	\label{fig:sim_rviz}
 \end{figure}
 
-As written further up in the article, the second task has not been completed. 
-
+\subsection{Real world results}
+After having tested the controller in simulation the next step is to test it in a real world scenario. This is done using the Vicon motion control system which is able to accurately measure a UAV's position. This is done through 12 motion capture cameras that can locate small grey balls which are taped onto the drone itself. The Vicon system uses these balls as an reference point in space which can then be grouped together in the Vicon software and it will be able to publish the position as a topic in ROS.
 
 \section{Conclusion}
 The main objective for this project has been to develop control software for a UAV so it would be able to navigate to four coordinate-points in 3D space. The plots shown during the Results and discussion section have clearly shown how the UAV reaches the four points. Furthermore different tools for analysing the UAV data have been used such as rviz. Task 2 haven't been completed because of time constraints and would have high priority for future work.
