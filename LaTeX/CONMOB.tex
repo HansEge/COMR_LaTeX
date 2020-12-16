@@ -7,7 +7,9 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{float}
 \usepackage{cleveref}
+\usepackage{epstopdf}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -41,19 +43,122 @@ The main focus of this paper will be to explain and document the control softwar
 \subsection{The Robot Operating System}
 In order to develop software for robots in a structured and easy way, the robot operating system(ROS)\cite{ros} has been used for this project. ROS is based upon the subscriber-publisher pattern where nodes is able to publish data as topics and subscribe to specific topics. In this project a node has been developed that is a subscriber and publisher which enables the node to: gather data, make calculations using this data and the publish new data. Furthermore a another node has been made solely for the purpose of gathering data and displaying this data using different plots.
 
+\subsection{PID-controller}
+In the two tasks for this project will a PID-controller be implemented to control the Parrot Bebop2 drone. PID stands for proportional-integral-derivative controller. The proportional part of the controller acts as a linear feedback control system in which error correction is applied with a constant value that gives a proportional relationship between the measured value and the desired value. An increase in the $K_p$ parameter will result in a decrease in rise time and steady-state error as the current error will have bigger influence on the controller output. The negative side effect of an increase in $K_p$ is an increase in overshoot and small decrease in settling time as current error first becomes negative after the goal has been reached. The proportional control algorithm can be express mathematically as:
+
+
+\begin{equation}
+P_{out} = K_p e(t) \label{eq1}
+\end{equation}
+
+Where $P_{out}$ is the output of the controller, $K_p$ is the controller parameter, $e(t)$ is the measured error value at a certain time t. 
+
+The integral part of the controller doesn't only look at the actual error as the proportional part does but also the time of which it has persisted. The integral part of the controller looks as at the past error, and if the applied force isn't enough to bring the error to zero, the force will be increased as time passes. An increase in the $K_i$ parameter will result in a decrease in rise time as the accumulated errors result in higher control output and it eliminates the steady-state error over time. The negative side effect of an increase in $K_i$ is an increase in overshoot and settling time as accumulated error first becomes smaller after the goal has been reached. The integral control algorithm can be express mathematically as:
+
+\begin{equation}
+I_{out} = K_i \int_{t}^{0}  e(\tau) d\tau \label{eq2}
+\end{equation}
+
+Where $I_{out}$ is the output of the controller, $K_i$ is the controller parameter, $e(\tau)$ is the error values from time 0 to the present time t. 
+
+The derivative part of the controller look at the slope of the error over time and multiplies the rate of change by the derivative gain. The derivative part of the controller has an insight in the "future", for example if the object is quickly approaching the target, then the slope of the error over time will be negative will be negative and the controller output will decrease making sure the object doesn't overshoot by a lot. An increase in the $K_d$ parameter will result in overshoot and settling time as the slope of the error over time will result in a negative values as the object comes closer to the goal. An increase in $K_d$ doesn't have any notable influence in the rise time or the steady-state error. The derivative control algorithm can be express mathematically as:
+
+\begin{equation}
+D_{out} = K_d \frac{de(t)}{dt} \label{eq3}
+\end{equation}
+
+Where $D_{out}$ is the output of the controller, $K_d$ is the controller parameter, $de(t)$ is the change in error and  $dt$ is the change in time.
+
+The by combining the three parts into a PID-controller it will be expressed mathematically as:
+ 
+\begin{equation}
+u(t) = K_p e(t)+ K_i \int_{t}^{0}  e(\tau) d\tau+K_d \frac{de(t)}{dt} \label{eq4}
+\end{equation}
+
+Where $u(t)$ is the controller output. 
+
+\subsection{Coordinate transformation}
+When working with unmanned aerial vehicles it is important to understand how the body of the aerial vehicle is oriented with respect to the earth.
+The inertial frame is the earth-fixed set of axes that is used as an unmoving reference.  It is commonly known that the x-axis points north, the y-axis points east and the z-axis points below. This is also called North-East-Down (NED) reference frame. 
+To move from the inertial frame to the body frame a sequence of rotations has to be performed. The sequence involve rotating the frame around one axis at the time. Before the first rotation the body reference coordinate matches that of the inertial frame. \\\\
+\textit{First rotation: Yaw rotation}\\
+The yaw rotation represents rotation about the z-axis by an angle $\psi$. This rotation generates a new coordinate frame where the z-axis of the body frame is aligned with the Z-axis of the inertial frame and x and y coordinate are rotated with the angle $\psi$. We call this transformation $T_\psi$. The rotation of inertial frame to $T_\psi$ frame is preformed be multiplying the vector by the rotation matrix see \cref{eq5} 
+
+\begin{equation}
+T_\psi=
+\begin{bmatrix}
+x_1\\
+y_1\\
+z_1 
+\end{bmatrix}=
+\begin{bmatrix}
+cos(\psi) & sin(\psi) & 0\\
+-sin(\psi) & cos(\psi) & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+x_I\\
+y_I\\
+z_I 
+\end{bmatrix}\label{eq5}
+\end{equation}
+\\\\
+\textit{Second rotation: Yaw and Pitch rotation}\\
+The second rotation involves rotating the newly generated frame $T_\psi$ Y-axis by an angle $\theta$. This rotation generates a new coordinate frame where the Y-axis of the new coordinate frame is aligned with the Y-axis of the $T_\psi$ frame and x and z coordinate are rotated with the angle $\theta$. This transformation is again performed by multiplying the vector by the rotation matrix see \cref{eq6}
+
+\begin{equation}
+T_\theta=
+\begin{bmatrix}
+x_2\\
+y_2\\
+z_2 
+\end{bmatrix}=
+\begin{bmatrix}
+cos(\theta) & 0 & -sin(\theta)\\
+0 & 1 & 0 \\
+sin(\theta) & 0 & cos(\theta)
+\end{bmatrix}
+\begin{bmatrix}
+x_1\\
+y_1\\
+z_1 
+\end{bmatrix}\label{eq6}
+\end{equation}
+\\\\
+\textit{Third rotation: Yaw, Pitch and Roll rotation}\\
+The third rotation involves rotating the newly generated frame $T_\theta$ Y-axis by an angle $\phi$.
+This rotation generates a new coordinate frame where the X-axis of the new coordinate frame is aligned with the X-axis of the $T_\theta$ frame and x and z coordinate are rotated with the angle $\phi$. We call this final frame the body frame. This transformation is again performed by multiplying the vector by the rotation matrix see \cref{eq7}
+\begin{equation}
+T_\phi=
+\begin{bmatrix}
+x_B\\
+y_B\\
+z_B 
+\end{bmatrix}=
+\begin{bmatrix}
+1 & 0 & 0\\
+0 & cos(\phi) & sin(\phi) \\
+0 & -sin(\phi) & cos(\phi)
+\end{bmatrix}
+\begin{bmatrix}
+x_2\\
+y_2\\
+z_2 
+\end{bmatrix}\label{eq7}
+\end{equation}
+\\
+The complete rotation matrix for moving from the inertial frame to the body frame is given by \cref{eq8}
+\begin{equation}
+T^B_I = T_\psi T_\theta T_\phi\label{eq8}
+\end{equation}
+
+
+
 \subsection{Parrot Bebop2 drone}
 In order for the UAV to be able navigate to the given coordinates, a closed-loop control algorithm has to be developed in this case a p-controller is used to control the UAV. The UAV is a Parrot Bebob2 and is controlled using the package "bebop\_autonomy". By using this package it is possible to send velocity and angular velocity commands to a ROS topic and thereby control the speed and orientation of the drone. 
 
 The p-controller developed in this project works by calculating the distance from the UAV to the currently active goal and use this as the error for the controller. A constant is multiplied to the error and the product of this will be used to set the velocity of the UAV.
-
-\subsection{Inertial frame and body frame}
-Two important aspects of UAV control software is the \textit{inertial frame} and \textit{body frame}.
-
-\textbf{Intertial frame:} is an earth-fixed coordinates system. It is also sometimes described as a  north-east-down or NED reference frame, where north is the inertial x direction, east is the inertial y direction and down is the inertial z direction\cite{book}. 
-
-\textbf{Body frame: } is a coordinates system fixed to the body of the vehicle with its origin at the center of mass, x-axis pointing along the fuselage reference line, z-axis pointing down perpendicular to x and y-axis. The coordinate system rotates with the vehicle. 
-
-As a task for this project the Bebop2 drone must navigate between the goal-coordinates with different fixed yaw angles. In order for the controller to work as intended a transformation of the inertial-frame coordinates system to the body frame coordinate-system is needed. This is done by rotating inertial frame three times. First around z-axis(yaw), then y-axis(pitch) of the new coordinate system and lastly around the x-axis(roll).  
+  
 
 \subsection{Gazebo}
 Gazebo is simulation environment that works together with ROS and is therefore suitable as a simulation tool for this project. Parrot provides the Bebop2 UAV as a downloadable package for Gazebo and this package is used for this project.
