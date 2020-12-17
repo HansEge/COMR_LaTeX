@@ -24,36 +24,37 @@
 
 \begin{document}
 
-\title{Aarhus University MSc Course Project  \\ Control of Mobile Robots (AY 2019-20)}
+\title{Aarhus University MSc Course Project  \\ Control of Mobile Robots}
 
-\author{\IEEEauthorblockN{S. L. Skovgaard}
+\author{\IEEEauthorblockN{S. L. Skovgaard and Daniel Tøttrup}
 \IEEEauthorblockA{\textit{dept. of Engineering (of Aff.)} \\
 \textit{Aarhus Unitversity (of Aff.)}\\
 Aarhus, Denmark \\
-201401682@post.au.dk}}
+201401682@post.au.dk \\
+201509520@post.au.dk}}
 
 \maketitle
 
 \begin{abstract}
 
-This document is the final project in the course Control of Mobile Robots. This final project focus on designing and implementing a PID-controller, that is able to control a Parrot Bebop 2 drone in real world lab environment and investing the influence the different controller parameter have. To accomplish this is it necessary to transform linear velocity and angular rates in Inertial coordinates into the drones body frames. The project consist of two tasks. The first task involve the UAV hovering in a specific point 1 meter above the ground while being exposed to disturbances. The second task involve the UAV flying in a square shape trajectory by visiting the way-points (0,0,1), (2,0,1), (2,2,1) and (0,2,1) with an arbitrary yaw angle. 
-In both task are different controller parameters tested both individually and combined. The transformation of linear velocity in Inertial coordinates into the UAVs body frames were successfully implemented. The PID-controller were successfully implemented both in the simulation and in the real world lab environment. The different changes in controller parameter resulted in the expected behavior. 
+This document is the final project in the course Control of Mobile Robots. This final project focus on designing and implementing a PID-controller, that is able to control a Parrot Bebop 2 UAV in real world lab environment and investigating what influence the different controller parameter have. To accomplish this is it necessary to transform linear velocity and angular rates in inertial coordinates into the UAV's body frames. The project consist of two tasks. The first task involve the UAV hovering in a specific point 1 meter above the ground while being exposed to disturbances. The second task involve the UAV flying in a square shape trajectory by visiting the way-points (0,0,1), (2,0,1), (2,2,1) and (0,2,1) with an arbitrary yaw angle. 
+In both tasks different controller parameters have been tested both individually and combined. The transformation of linear velocity in inertial coordinates into the UAVs body frames were successfully implemented. The PID-controller were successfully implemented both in the simulation and in the real world lab environment. The different changes in controller parameter resulted in expected behavior. 
 
 \end{abstract}
 
 \section{Introduction}
 
-This paper will carry out the final project in Control of Mobile Robots course at Aarhus university. It will involve implementing a closed-loop basic controller (PID-controller) for the Parrot Bebop 2 drone using ROS and Sphinx as development tools, using the bebop\_autonomy package. This final project will involve testing the designed close-loop controller on a real drone in a Lab environment. The ROS package vicon\_bridge will be used to communicate with the drone in the lab. \\
-The final project will involve two different tasks. In the first task will the drone start of by taking off and hovering one meters above the ground, and keep that position for a fixed amount of time. The implemented controller on the drone will then be tested by applying physical disturbances to the drone when hovering. 
+This paper will carry out the final project in Control of Mobile Robots course at Aarhus university. It will involve implementing a closed-loop controller (PID-controller) for the Parrot Bebop 2 UAV using ROS and Sphinx as development tools, using the bebop\_autonomy package. This final project will involve testing the designed close-loop controller on a real UAV in a lab environment. The ROS package vicon\_bridge will be used to communicate with the UAV in the lab. \\
+The final project will involve two different tasks. In the first task the UAV will start of by taking off and hovering one meter above ground, and keep that position for a fixed amount of time. The implemented controller on the UAV will then be tested by applying physical disturbances to the UAV when hovering. 
 
-In the second task will the drone visit 4 different way points with an arbitrary yaw angle.  
-In both tasks will different controller values, to see if practice is consistent with theory. These two tasks will be described and evaluated upon individually. This paper will fist touch upon the the theory behind then walk though one task at a time and reflect on the results.
+In the second task the UAV visit 4 different way points with an arbitrary yaw angle.  
+In both tasks will different controller values, to see if practice is consistent with theory. These two tasks will be described and evaluated upon individually. This paper will fist touch upon the the theory behind then walk through one task at a time and reflect on the results.
 
-Attached is two appendix, one contains the code implemented for task 1 and task 2 and the second appendix contains additional result from the lab that will be referred to in the paper.   
+Attached is two appendix, appendix A contains the code implemented for task 1 and task 2 and appendix B contains additional result from the lab that will be referred to in the paper.   
 
 \section{Theory}\label{theory}
 \subsection{The Robot Operating System}
-In order to develop software for robots in a structured and easy way, the robot operating system(ROS)\cite{ros} has been used for this project. ROS is based upon the subscriber-publisher pattern where nodes are able to publish data as topics and subscribe to specific topics. In this project a node has been developed that is a subscriber and publisher which enables the node to: gather data, make calculations using this data and the publish new data. Furthermore a another node has been made solely for the purpose of gathering data and displaying this data using different plots.
+In order to develop software for robots in a structured and easy way, the robot operating system(ROS)\cite{ros} has been used for this project. ROS is based upon the subscriber-publisher pattern where nodes are able to publish data as topics and subscribe to specific topics. In this project a node has been developed that is a subscriber and publisher which enables the node to: gather data, make calculations using this data and then publish new data. 
 
 \subsection{PID-controller}
 In the two tasks for this project is a PID-controller implemented to control the Parrot Bebop2 drone. PID stands for proportional-integral-derivative controller. The \textbf{proportional} part of the controller acts as a linear feedback control system in which error correction is applied with a constant value that gives a proportional relationship between the measured value and the desired value. An increase in the $K_p$ parameter will result in a decrease in rise time and steady-state error as the current error will have bigger influence on the controller output. The negative side effect of an increase of $K_p$ is an increase in overshoot and small decrease in settling time as current error first becomes negative after the goal has been reached. The proportional control algorithm can be express mathematically as:
@@ -72,7 +73,7 @@ I_{out} = K_i \int_{t}^{0}  e(\tau) d\tau \label{eq2}
 
 Where $I_{out}$ is the output of the controller, $K_i$ is the controller parameter, $e(\tau)$ is the error values from time 0 to the present time t. 
 
-The \textbf{derivative} part of the controller look at the slope of the error over time and multiplies the rate of change by the derivative gain. The derivative part of the controller has an insight in the "future", for example if the object is quickly approaching the target, then the slope of the error over time will be negative and the controller output will decrease making sure the object doesn't overshoot by a lot. An increase in the $K_d$ parameter will result in overshoot and settling time as the slope of the error over time will result in a negative values as the object comes closer to the goal. An increase in $K_d$ doesn't have any notable influence in the rise time or the steady-state error. The derivative control algorithm can be express mathematically as:
+The \textbf{derivative} part of the controller look at the slope of the error over time and multiplies the rate of change by the derivative gain. The derivative part of the controller has an insight in the "future", for example if the UAV is quickly approaching the target, then the slope of the error over time will be negative and the controller output will decrease making sure the object doesn't overshoot the target. An increase in the $K_d$ parameter will result in a decrease of overshoot and settling time as the slope of the error over time will result in a negative values as the UAV comes closer to the goal. An increase in $K_d$ doesn't have any notable influence in the rise time or the steady-state error. The derivative control algorithm can be express mathematically as:
 
 \begin{equation}
 D_{out} = K_d \frac{de(t)}{dt} \label{eq3}
@@ -80,7 +81,7 @@ D_{out} = K_d \frac{de(t)}{dt} \label{eq3}
 
 Where $D_{out}$ is the output of the controller, $K_d$ is the controller parameter, $de(t)$ is the change in error and $dt$ is the change in time.
 
-The by combining the three parts into a PID-controller it will be expressed mathematically as:
+Then by combining the three parts into a PID-controller it will be expressed mathematically as:
  
 \begin{equation}
 u(t) = K_p e(t)+ K_i \int_{t}^{0}  e(\tau) d\tau+K_d \frac{de(t)}{dt} \label{eq4}
@@ -195,12 +196,11 @@ The code used for this project is built using the rospy package which is a Pytho
 
 As mentioned earlier in this article, ROS makes use of the publisher/subscribre pattern. A single node containing several classes have been made for this project. The classes are: p-controller, takeoff and plot\_maker. 
 
-\textbf{controller:} The responsibility of controller is handle the calculations and navigation of the UAV. The error or the euclidean distance to the goal-coordinates is calculated by first calculating the distance in the x-plane then the y-plane and lastly the z-plane. This results in three different distances which all are used as the error in each axis. In the controller class is the PID-controller logic implemented, so the error and time in handled differently in each part of the algorithm. The product of the PID algorithm is used to set the velocity in each direction, x, y and z.
+\textbf{controller:} The responsibility of controller is to handle the calculations and navigation of the UAV. The error or the euclidean distance to the goal-coordinates is calculated by first calculating the distance in the x-plane then the y-plane and lastly the z-plane. This results in three different distances which all are used as the error in each axis. Time is furthermore used (together with error) to calculate the Ki and Kd terms. The product of the PID algorithm is used to set the velocity in each direction, x, y and z.
 
 \textbf{Takeoff:} As the name suggests this class handles the takeoff. It's a simple class that makes sure the drone has performed a complete takeoff sequence and when this is done it no longer has any responsibility. 
 
 \textbf{Plot\_maker:} This class subscribes to the same topic as the controller class, /vicon/. It stores all values obtained from the vicon bridge and when the UAV has done its task, displays a number of plots which will be discussed later in the article. 
-
 
 \section{Results and discussion}
 
@@ -399,11 +399,11 @@ The proportional and derivative has been increased 4 times compared to the base 
 The results of the optimal controller show how the AUV visits the 4 way-points 20 seconds faster than the basic controller on \cref{fig:task2_1_pos} and \cref{fig:task2_1_err}, with almost no overshot. This is a very satisfying result showcasing how manual PID-controller tuning can improve the behavior of a AUV massively.  
 
 \section{Conclusion}
-The objective of this final project were to design and implement a PID-controller, that would be able to control a Parrot Bebop 2 drone in the real lab environment. To accomplish this was it necessary to transform linear velocity in inertial coordinates into the UAVs body frames. Another objective in this project were to investigate the influence of the different controller parameter both individually and combined and plot the results. 
+The objective of this final project were to design and implement a PID-controller, that would be able to control a Parrot Bebop 2 drone in the real lab environment. To accomplish this it have been necessary to transform linear velocity in inertial coordinates into the UAVs body frame. Another objective in this project have been to investigate the influence of the different controller parameters, both individually and combined and plot the results. 
 
-This project are divided into two different tasks. The first task of the project involve the UAV hovering one meter above the ground at a specific point while being exposed to disturbances, which would make it possible to see the behavior of the controller. The second task of the project involve the UAV flying in square shape trajectory by visiting the way-points (2,0,1), (2,2,1), (0,2,1) and (0,0,1). The experiments of this project was carried out in real world setting at the AU Air lab located in Skejby. Both these tasks was carried out with different controller parameters, to investigate the influence of $K_p$, $K_i$ and $K_d$ individually and combined in a real world scenario. The PID-controller together with the transformation of linear velocity in Inertial coordinates into the UAVs body frames were successfully implemented.
+This project are divided into two different tasks. The first task of the project involve the UAV hovering one meter above the ground at a specific point while being exposed to disturbances, which would make it possible to see the behaviour of the controller. The second task of the project involve the UAV flying in a square shape trajectory by visiting the way-points (2,0,1), (2,2,1), (0,2,1) and (0,0,1). The experiments of this project was carried out in real world setting at the AU Air lab located in Skejby. Both these tasks were carried out with different controller parameters, to investigate the influence of $K_p$, $K_i$ and $K_d$ individually and combined in a real world scenario. The PID-controller together with the transformation of linear velocity in Inertial coordinates into the UAVs body frames were successfully implemented.
 
-The results showed that the theoretically influance of the controller parameter matched the physical results obtained at AU Air lab. The plots showed that an increase in $K_p$ resulted in lower rise time steady-state error but increase in overshoot and more unstable system. An increase in $K_i$ resulted in lower rise time and steady-state but an increase in overshoot of state-state error and more unstable system. Last an increase in $K_d$ resulted lower overshoot and settling time and better stability but an decrease in rise time. 
+The results showed that the theoretically influence of the controller parameter matched the physical results obtained at AU Air lab. The plots showed that an increase in $K_p$ resulted in lower rise time steady-state error but increase in overshoot and more unstable system. An increase in $K_i$ resulted in lower rise time and steady-state but an increase in overshoot of state-state error and more unstable system. Last an increase in $K_d$ resulted lower overshoot and settling time and better stability but an decrease in rise time. 
 
 
 \begin{thebibliography}{00}
