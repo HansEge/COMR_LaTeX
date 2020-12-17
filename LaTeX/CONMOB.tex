@@ -10,6 +10,10 @@
 \usepackage{float}
 \usepackage{cleveref}
 \usepackage{epstopdf}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -32,20 +36,27 @@ Aarhus, Denmark \\
 
 \begin{abstract}
 
-The article will document how to develop control software for UAV's and simulate the controller using the popular Gazebo software. 	
+This document is the final project in the course Control of Mobile Robots. This final project focus on designing and implementing a PID-controller, that is able to control a Parrot Bebop 2 drone in real world lab environment and investing the influence the different controller parameter have. To accomplish this is it necessary to transform linear velocity and angular rates in Inertial coordinates into the drones body frames. The project consist of two tasks. The first task involve the UAV hovering in a specific point 1 meter above the ground while being exposed to disturbances. The second task involve the UAV flying in a square shape trajectory by visiting the way-points (0,0,1), (2,0,1), (2,2,1) and (0,2,1) with an arbitrary yaw angle. 
+In both task are different controller parameters tested both individually and combined. The transformation of linear velocity in Inertial coordinates into the UAVs body frames were successfully implemented. The PID-controller were successfully implemented both in the simulation and in the real world lab environment. The different changes in controller parameter resulted in the expected behavior. 
 
 \end{abstract}
 
 \section{Introduction}
-The main focus of this paper will be to explain and document the control software used to control a UAV robot. The software makes use of the robot operation system ROS. The paper will explain theory, code, simulation and results with accompanying figures and plots. The main objective of this project is to get a UAV to autonomously navigate to four coordinate-points.
+
+This paper will carry out the final project in Control of Mobile Robots course at Aarhus university. It will involve implementing a closed-loop basic controller (PID-controller) for the Parrot Bebop 2 drone using ROS and Sphinx as development tools, using the bebop\_autonomy package. This final project will involve testing the designed close-loop controller on a real drone in a Lab environment. The ROS package vicon\_bridge will be used to communicate with the drone in the lab. \\
+The final project will involve two different tasks. In the first task will the drone start of by taking off and hovering one meters above the ground, and keep that position for a fixed amount of time. The implemented controller on the drone will then be tested by applying physical disturbances to the drone when hovering. 
+
+In the second task will the drone visit 4 different way points with an arbitrary yaw angle.  
+In both tasks will different controller values, to see if practice is consistent with theory. These two tasks will be described and evaluated upon individually. This paper will fist touch upon the the theory behind then walk though one task at a time and reflect on the results.
+
+Attached is two appendix, one contains the code implemented for task 1 and task 2 and the second appendix contains additional result from the lab that will be referred to in the paper.   
 
 \section{Theory}\label{theory}
 \subsection{The Robot Operating System}
-In order to develop software for robots in a structured and easy way, the robot operating system(ROS)\cite{ros} has been used for this project. ROS is based upon the subscriber-publisher pattern where nodes is able to publish data as topics and subscribe to specific topics. In this project a node has been developed that is a subscriber and publisher which enables the node to: gather data, make calculations using this data and the publish new data. Furthermore a another node has been made solely for the purpose of gathering data and displaying this data using different plots.
+In order to develop software for robots in a structured and easy way, the robot operating system(ROS)\cite{ros} has been used for this project. ROS is based upon the subscriber-publisher pattern where nodes are able to publish data as topics and subscribe to specific topics. In this project a node has been developed that is a subscriber and publisher which enables the node to: gather data, make calculations using this data and the publish new data. Furthermore a another node has been made solely for the purpose of gathering data and displaying this data using different plots.
 
 \subsection{PID-controller}
-In the two tasks for this project will a PID-controller be implemented to control the Parrot Bebop2 drone. PID stands for proportional-integral-derivative controller. The proportional part of the controller acts as a linear feedback control system in which error correction is applied with a constant value that gives a proportional relationship between the measured value and the desired value. An increase in the $K_p$ parameter will result in a decrease in rise time and steady-state error as the current error will have bigger influence on the controller output. The negative side effect of an increase in $K_p$ is an increase in overshoot and small decrease in settling time as current error first becomes negative after the goal has been reached. The proportional control algorithm can be express mathematically as:
-
+In the two tasks for this project is a PID-controller implemented to control the Parrot Bebop2 drone. PID stands for proportional-integral-derivative controller. The \textbf{proportional} part of the controller acts as a linear feedback control system in which error correction is applied with a constant value that gives a proportional relationship between the measured value and the desired value. An increase in the $K_p$ parameter will result in a decrease in rise time and steady-state error as the current error will have bigger influence on the controller output. The negative side effect of an increase of $K_p$ is an increase in overshoot and small decrease in settling time as current error first becomes negative after the goal has been reached. The proportional control algorithm can be express mathematically as:
 
 \begin{equation}
 P_{out} = K_p e(t) \label{eq1}
@@ -53,7 +64,7 @@ P_{out} = K_p e(t) \label{eq1}
 
 Where $P_{out}$ is the output of the controller, $K_p$ is the controller parameter, $e(t)$ is the measured error value at a certain time t. 
 
-The integral part of the controller doesn't only look at the actual error as the proportional part does but also the time of which it has persisted. The integral part of the controller looks as at the past error, and if the applied force isn't enough to bring the error to zero, the force will be increased as time passes. An increase in the $K_i$ parameter will result in a decrease in rise time as the accumulated errors result in higher control output and it eliminates the steady-state error over time. The negative side effect of an increase in $K_i$ is an increase in overshoot and settling time as accumulated error first becomes smaller after the goal has been reached. The integral control algorithm can be express mathematically as:
+The \textbf{integral} part of the controller doesn't only look at the actual error as the proportional part does but it also looks as at the past errors, and if the applied force isn't enough to bring the error to zero, the force will be increased as time passes. An increase in the $K_i$ parameter will result in a decrease in rise time as the accumulated errors result in higher control output and it eliminates the steady-state error over time. The negative side effect of an increase in $K_i$ is an increase in overshoot and settling time as accumulated error first becomes smaller after the goal has been reached. The integral control algorithm can be express mathematically as:
 
 \begin{equation}
 I_{out} = K_i \int_{t}^{0}  e(\tau) d\tau \label{eq2}
@@ -61,13 +72,13 @@ I_{out} = K_i \int_{t}^{0}  e(\tau) d\tau \label{eq2}
 
 Where $I_{out}$ is the output of the controller, $K_i$ is the controller parameter, $e(\tau)$ is the error values from time 0 to the present time t. 
 
-The derivative part of the controller look at the slope of the error over time and multiplies the rate of change by the derivative gain. The derivative part of the controller has an insight in the "future", for example if the object is quickly approaching the target, then the slope of the error over time will be negative will be negative and the controller output will decrease making sure the object doesn't overshoot by a lot. An increase in the $K_d$ parameter will result in overshoot and settling time as the slope of the error over time will result in a negative values as the object comes closer to the goal. An increase in $K_d$ doesn't have any notable influence in the rise time or the steady-state error. The derivative control algorithm can be express mathematically as:
+The \textbf{derivative} part of the controller look at the slope of the error over time and multiplies the rate of change by the derivative gain. The derivative part of the controller has an insight in the "future", for example if the object is quickly approaching the target, then the slope of the error over time will be negative and the controller output will decrease making sure the object doesn't overshoot by a lot. An increase in the $K_d$ parameter will result in overshoot and settling time as the slope of the error over time will result in a negative values as the object comes closer to the goal. An increase in $K_d$ doesn't have any notable influence in the rise time or the steady-state error. The derivative control algorithm can be express mathematically as:
 
 \begin{equation}
 D_{out} = K_d \frac{de(t)}{dt} \label{eq3}
 \end{equation}
 
-Where $D_{out}$ is the output of the controller, $K_d$ is the controller parameter, $de(t)$ is the change in error and  $dt$ is the change in time.
+Where $D_{out}$ is the output of the controller, $K_d$ is the controller parameter, $de(t)$ is the change in error and $dt$ is the change in time.
 
 The by combining the three parts into a PID-controller it will be expressed mathematically as:
  
@@ -151,14 +162,6 @@ The complete rotation matrix for moving from the inertial frame to the body fram
 \begin{equation}
 T^B_I = T_\psi T_\theta T_\phi\label{eq8}
 \end{equation}
-
-
-
-\subsection{Parrot Bebop2 drone}
-In order for the UAV to be able navigate to the given coordinates, a closed-loop control algorithm has to be developed in this case a p-controller is used to control the UAV. The UAV is a Parrot Bebob2 and is controlled using the package "bebop\_autonomy". By using this package it is possible to send velocity and angular velocity commands to a ROS topic and thereby control the speed and orientation of the drone. 
-
-The p-controller developed in this project works by calculating the distance from the UAV to the currently active goal and use this as the error for the controller. A constant is multiplied to the error and the product of this will be used to set the velocity of the UAV.
-  
 
 \subsection{Gazebo}
 Gazebo is simulation environment that works together with ROS and is therefore suitable as a simulation tool for this project. Parrot provides the Bebop2 UAV as a downloadable package for Gazebo and this package is used for this project.
