@@ -162,6 +162,30 @@ The complete rotation matrix for moving from the inertial frame to the body fram
 \begin{equation}
 T^B_I = T_\psi T_\theta T_\phi\label{eq8}
 \end{equation}
+\\\\
+\textit{Angular velocity of the UAV}\\
+Since $\dot{\psi}$ is measured in the inertial frame, and $\dot{\theta}$ is measured in the Frame 1, and $\dot{\phi}$ is measured in the Frame 2. Are the relationship between the roll rate-p, and the pitch rate-q and the yaw rate-r and the Euler rates $(\dot{\psi},\dot{\theta},\dot{\phi})$ as follows \cref{eq9} 
+
+\begin{equation}
+\begin{bmatrix}
+p\\
+q\\
+r 
+\end{bmatrix}=
+\begin{bmatrix}
+1 & 0 & -S_\theta\\
+0 & C\phi & C_\theta S\phi \\
+0 & -S\phi & C_\theta C_\phi
+\end{bmatrix}
+\begin{bmatrix}
+\dot{\psi}\\
+\dot{\theta}\\
+\dot{\phi}
+\end{bmatrix}\label{eq9}
+\end{equation}
+
+Where the letter S represents sin and the letter C represents cos \cite{b2}\cite{b3}
+\newpage
 
 \subsection{Gazebo}
 Gazebo is simulation environment that works together with ROS and is therefore suitable as a simulation tool for this project. Parrot provides the Bebop2 UAV as a downloadable package for Gazebo and this package is used for this project.
@@ -171,14 +195,12 @@ The code used for this project is built using the rospy package which is a Pytho
 
 As mentioned earlier in this article, ROS makes use of the publisher/subscribre pattern. A single node containing several classes have been made for this project. The classes are: p-controller, takeoff and plot\_maker. 
 
-\textbf{P-controller:} The responsibility of p-controller is handle the calculations and navigation of the UAV. The error or the euclidean distance to the goal-coordinates is calculated by first calculating the distance in the x-plane then the y-plane and lastly the z-plane. This results in three different distances which all are used as the error in each axis. The error are multiplied a constant \textit{kp} and lastly the product of this is used to set the velocity in each direction, x, y and z.
+\textbf{controller:} The responsibility of controller is handle the calculations and navigation of the UAV. The error or the euclidean distance to the goal-coordinates is calculated by first calculating the distance in the x-plane then the y-plane and lastly the z-plane. This results in three different distances which all are used as the error in each axis. In the controller class is the PID-controller logic implemented, so the error and time in handled differently in each part of the algorithm. The product of the PID algorithm is used to set the velocity in each direction, x, y and z.
 
 \textbf{Takeoff:} As the name suggests this class handles the takeoff. It's a simple class that makes sure the drone has performed a complete takeoff sequence and when this is done it no longer has any responsibility. 
 
-\textbf{Plot\_maker:} This class subscribes to the same topic as the p-controller class, /bebob/odom. It stores all values obtained from odometry and when the UAV has been to all goal-coordinates, displays a number of plots which will be discussed later in the article. 
+\textbf{Plot\_maker:} This class subscribes to the same topic as the controller class, /vicon/. It stores all values obtained from the vicon bridge and when the UAV has done its task, displays a number of plots which will be discussed later in the article. 
 
-
-One task for this project is to navigate to the four goals with a set yaw angle, this however haven't been completed here as the author has no idea how the rotation matrices are supposed to be programmed. 
 
 \section{Results and discussion}
 
@@ -218,6 +240,10 @@ The main objective for this project has been to develop control software for a U
 \bibitem{Week3} Erdal Kaycan, ``Control Of Mobile Robots, week 3: Ground Robot models``, 16th of September 2020
 
 \bibitem{book} RANDAL W. BEARD and TIMOTHY W. McLAIN, SMALL UNMANNED AIRCRAFT Theory and Practice, 2012
+
+\bibitem{b2} CHRobotics, 2020, Understanding Euler Angles, http://www.chrobotics.com/library/understanding-euler-angles
+
+\bibitem{b3} Control of Mobile Robots, Week 2 slides from lecture.
 
 \end{thebibliography}
 \vspace{12pt}
