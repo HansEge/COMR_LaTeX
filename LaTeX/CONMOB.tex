@@ -206,7 +206,7 @@ As mentioned earlier in this article, ROS makes use of the publisher/subscribre 
 
 
 \subsection{Simulation results}
-To verify that the controller behaves as expected and to ensure that the drone will not crash when testing in real life, the controller has been tested in simulation first. The behaviour should be more or less the same when testing in a real world scenario. The simulation tests covers both the hovering and waypoint scenario however, only the waypoint scenario will be shown in this report for the simulation. The drone used for the simulation as well as in the real world is the Parrot bebop2 UAV.
+To verify that the controller behaves as expected and to ensure that the UAV will not crash when testing in real life, the controller has been tested in simulation first. The behaviour should be more or less the same when testing in a real world scenario. The simulation tests covers both the hovering and waypoint scenario. only the waypoint scenario will be shown in this report for the simulation. The UAV used for the simulation as well as in the real world is a Parrot Bebop 2 drone.
 
 The goal for the controller has been to optimize for speed which means that it is allowed to have a relative high amount of overshoot. Furthermore it should have a quick settling time as this has a big impact on how quick the drone will complete its waypoint task. To accommodate for these requirements manual tuning of the three controller coefficients found a reasonably well suited controller with the values set to: Kp = 0.1, Ki = 0.01 and Kd = 0.1. On \cref{fig:sim_pos} the x, y and z position of the drone can be seen when using this controller. This result is a good start for the real world scenario and will be tuned further for the waypoint task.
 
@@ -229,6 +229,7 @@ Another way to visualize the simulation is using the program rviz which makes is
 \subsection{Real world results}
 After having tested the controller in simulation the next step is to test it in a real world scenario. This is done using the Vicon motion control system which is able to accurately measure a UAV's position. This is done through 12 motion capture cameras that can locate small grey balls which are taped onto the drone itself. The Vicon system uses these balls as an reference point in space which can then be grouped together in the Vicon software and it will be able to publish the position as a topic in ROS. This means that the controller will now subscribe to this topic instead of the odometry data from the UAV itself.
 
+\textbf{Task 1}
 The first task is to get the UAV to hover and be able to withstand disturbances. This means that if the drone experiences large gushes of wind it will be able to go back to its original position autonomously. To simulate this disturbance a piece of string was tied to the UAV and a person would simply pull in the string.
 
 On \cref{fig:task1_10_pos} the drone is set to hover at position (0, 0, 1). The controller is the same as in simulation (Kp = 0.1, Ki = 0.01, Kd = 0.1). It can be seen how the UAV flies to the desired location and then a big disturbance occurs which displaces the UAV over 2.5 meters in the negative x-direction. However the UAV quickly recovers and converges to its original position.  
@@ -249,7 +250,7 @@ On \cref{fig:task1_10_err} the same behaviour can be seen. When the disturbance 
 	\label{fig:task1_10_err}
 \end{figure}
 
-The controller used on \cref{fig:task1_10_err} and \cref{fig:task1_10_pos} seems to be doing a good job, however it also looks like it can be improved. By tuning the value of Kd the overshoot should decrease and in turn make it settle quicker which is one of the requirements for this controller. On \cref{fig:task1_11_pos} the position of the UAV can be seen. Kd has been increase threefold and now the overshoot has decreased greatly and it settles quicker. It still looks like there is some overshoot but it was observed during the test that the string attached to the UAV cause some amount of drag and made the UAV move slightly slower causing this overshoot from t=25 to t=43.
+The controller used on \cref{fig:task1_10_err} and \cref{fig:task1_10_pos} seems to be doing a good job, however it also looks like it can be improved. By tuning the value of Kd the overshoot should decrease and in turn make it settle quicker which is one of the requirements for this controller. On \cref{fig:task1_11_pos} the position of the UAV can be seen. $K_d$ has been increase threefold and now the overshoot has decreased greatly and it settles quicker. It still looks like there is some overshoot but it was observed during the test that the string attached to the UAV cause some amount of drag and made the UAV move slightly slower causing this overshoot from t=25 to t=43.
 
 \begin{figure}[hbtp]
 	\centering
@@ -267,7 +268,7 @@ On \cref{fig:task1_11_err} the error to the target can be seen. It shows the sam
 	\label{fig:task1_11_err}
 \end{figure}
 
-To decrease the rise time and eliminate the steady state error an increase in Ki will help alleviate that. This comes with a cost of an increase in settling time and decreases the stability which goes against the requirements for this controller. A controller with a Ki=0.03 has been tested and shows that the UAV takes a big hit to the settling time. These figures can be seen in appendix A.
+To decrease the rise time and eliminate the steady state error an increase in $K_i$ will help alleviate that. This comes with a cost of an increase in settling time and decreases the stability which goes against the requirements for this controller. A controller with a $Ki=0.03$ has been tested and shows that the UAV takes a big hit to the settling time. These figures can be seen in appendix A.
 
 When tuning the proportional term of the controller the rise time should decrease and the overshoot should increase, however the settling time will increase and the stability will decrease. On \cref{fig:task1_4_pos} it can be seen how the overshoot is increase compared to \cref{fig:task1_10_pos} and the stability has been decreased. 
 
@@ -286,7 +287,7 @@ The overshoot and stability issues can also be seen on \cref{fig:task1_4_err}.
 	\label{fig:task1_4_err}
 \end{figure}
 
-When examining all of these plots it is apparent that a PID controller is needed. After some manual tuning the parameters for this controller was found to be Kp = 0.4, Ki= 0.02 and Kd=0.4. By using the proportional, integral and derivative part it is possible to cancel out the negative aspects of each term. This controller can be seen on \cref{fig:task1_9_pos}. There is a significant amount of jitter when looking at the y-axis. This was observed in multiple tests and only occurred when the UAV was in a certain location. This could indicate a problem with the Vicon system or a problem with the motion capture system unable to locate all the balls taped onto the UAV. Whenever the UAV moved out this area the jitter disappeared and it performed as expected. This jitter can be seen on \cref{fig:task1_9_pos} and \cref{fig:task1_9_err} at t=15 and t=35.
+After looking at all of these plots where each controller parameter has been examined individually, it has given a much more intuitively understanding of what effect each controller parameter has on the output. THis gives the basis of manual tuning the optimal PID-controller for the task. After some manual tuning the parameters for this controller was found to be $K_p = 0.4$, $K_i = 0.02$, $K_d = 0.4$. By using the proportional, integral and derivative part it is possible to cancel out the negative aspects of each term. This controller can be seen on \cref{fig:task1_9_pos}. There is a significant amount of jitter when looking at the y-axis. This was observed in multiple tests and only occurred when the UAV was in a certain location. This could indicate a problem with the Vicon system or a problem with the motion capture system unable to locate all the balls taped onto the UAV. Whenever the UAV moved out this area the jitter disappeared and it performed as expected. This jitter can be seen on \cref{fig:task1_9_pos} and \cref{fig:task1_9_err} at t=15 and t=35.
 
 \begin{figure}[hbtp]
 	\centering
@@ -303,6 +304,99 @@ When examining all of these plots it is apparent that a PID controller is needed
 \end{figure}
 
 Based on the last two figures a very quick and stable controller has been made and it meets the requirement of having a quick settling time.
+
+\textbf{Task 2}
+
+The objective of task 2 were to make the UAV fly autonomously in square shape trajectory by visiting four self defined way-points using a PID-controller with an arbitrary yaw angle. Further more different settings for the PID-controller should be tested and analyzed. The UAV has to wait at a way-point for at least 3 seconds before flying on to the next one. 
+The chosen coordinates for the four way-points are (2,0,1), (2,2,1), (0,2,1) and (0,0,1), which forms a square shape one meter above the ground. Like in task 1 were the controller tested in the simulation chosen as base controller with the controller parameters of $K_p = 0.1$, $K_i = 0.01$, $K_d = 0.1$. On \cref{fig:task2_1_pos} and \cref{fig:task2_1_err} can the results of the UAV with a base PID-controller implemented visiting the 4 way-point be seen.
+On \cref{fig:task2_1_pos} can the x, y and z position of the UAV over time be seen and on \cref{fig:task2_1_err} can the error to the next way-point be seen. 
+
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_1_pos.png}
+	\caption{x, y and z coordinates of the UAV. ( $K_p = 0.1$, $K_i = 0.01$, $K_d = 0.1$)}
+	\label{fig:task2_1_pos}
+\end{figure}
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_1_err.png}
+	\caption{Error(distance) to way-points. ( $K_p = 0.1$, $K_i = 0.01$, $K_d = 0.1$)}
+	\label{fig:task2_1_err}
+\end{figure}
+
+\cref{fig:task2_1_pos} and \cref{fig:task2_1_err} shows how the AUV flies rather quickly on to the next way-point where it makes an overshoot around 20-25\%. 
+Like task 1 $K_d$ is now increased so the slope of error over time should weight more in the controller output to see if it makes the overshoot decrease. On \cref{fig:task2_4_pos} and \cref{fig:task2_4_err} are the result of controller parameter $K_d$ increased to 0.3 and $K_p$ and $K_i$ remains the same. 
+
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_4_pos.png}
+	\caption{x, y and z coordinates of the UAV. ( $K_p = 0.1$, $K_i = 0.01$, $K_d = 0.3$)}
+	\label{fig:task2_4_pos}
+\end{figure}
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_4_err.png}
+	\caption{Error(distance) to way-points. ( $K_p = 0.1$, $K_i = 0.01$, $K_d = 0.3$)}
+	\label{fig:task2_4_err}
+\end{figure}
+
+As expected did the overshoot decrease, it actually disappeared. On the downside are the AUV not as quick any more and the rise time has increased. The is because the slope og the error over time has a bigger influence on the controller output, which means if the AUV approaches the next way-point quickly will the slope be more negative resulting in a lower controller output. 
+Next is the controller parameter $K_i$ increased and $K_d$ is changed back to 0.1. This should result in a increase in rise time and overshoot. On \cref{fig:task2_3_pos} and \cref{fig:task2_3_err} are the result of controller parameter $K_i$ increased to 0.03 and $K_p$ and $K_d$ are both 0.1. 
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_3_pos.png}
+	\caption{x, y and z coordinates of the UAV. ( $K_p = 0.1$, $K_i = 0.03$, $K_d = 0.1$)}
+	\label{fig:task2_3_pos}
+\end{figure}
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_3_err.png}
+	\caption{Error(distance) to way-points. ( $K_p = 0.1$, $K_i = 0.03$, $K_d = 0.1$)}
+	\label{fig:task2_3_err}
+\end{figure}
+
+As expected are the AUV now flying much faster to next way-point compared to when $K_d$ were increased. On the other hand has overshoot been increased to almost 45\% and the settling time is very high as well. This is because an increase in $K_i$ makes past error have a bigger influence on the controller output and as the accumulated error first becomes smaller after the goal has been reached the AUV will tend to more overshoot an lower settling time. 
+In the last test before making the optimal controller will the controller parameter $K_p$ be increased and $K_i$ will be changed back to 0.01. On \cref{fig:task2_4_pos} and \cref{fig:task2_4_err} are the result of controller parameter $K_p$ increased to 0.3 and $K_i$ is 0.01 and $K_d$ is 0.1.
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_2_pos.png}
+	\caption{x, y and z coordinates of the UAV. ( $K_p = 0.3$, $K_i = 0.01$, $K_d = 0.1$)}
+	\label{fig:task2_2_pos}
+\end{figure}
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_2_err.png}
+	\caption{Error(distance) to way-points. ( $K_p = 0.3$, $K_i = 0.01$, $K_d = 0.1$)}
+	\label{fig:task2_2_err}
+\end{figure}
+
+The result is very similar to when controller parameter $k_i$ was increased with on overshoot around 50\%, but the AUV visits the four way-point twice as fast. This is because when $K_p$ is increased the current error has a bigger influence on the controller output, which makes the AUV tend to make a bigger overshoot and increase in settling time. But compared to the integral part of the algorithm does the proportional part become negative the moment AUV overshoots its target, which doesn't makes its settling time as bad. 
+For the optimal PID-controller has the same from task 1 $K_p = 0.4$, $K_i = 0.02$, $K_d = 0.4$ been chosen. 
+The proportional and derivative has been increased 4 times compared to the base controller to increase the speed in terms of rise time and minimize the overshoot and settling time. The integral part has only been increased 2 times as the integral part is mostly used to eliminate steady-state error, which wasn't problem in the base controller. On \cref{fig:task2_6_pos} and \cref{fig:task2_6_err} are the result of optimal controller with the parameters of $K_p = 0.4$, $K_i = 0.02$, $K_d = 0.4$
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_6_pos.png}
+	\caption{x, y and z coordinates of the UAV. ( $K_p = 0.4$, $K_i = 0.02$, $K_d = 0.4$)}
+	\label{fig:task2_6_pos}
+\end{figure}
+
+\begin{figure}[hbtp]
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/task2_6_err.png}
+	\caption{Error(distance) to way-points. ( $K_p = 0.4$, $K_i = 0.02$, $K_d = 0.4$)}
+	\label{fig:task2_6_err}
+\end{figure}
+
+The results of the optimal controller show how the AUV visits the 4 way-points 20 seconds faster than the basic controller on \cref{fig:task2_1_pos} and \cref{fig:task2_1_err}, with almost no overshot. This is a very satisfying result showcasing how manual PID-controller tuning can improve the behavior of a AUV massively.  
 
 \section{Conclusion}
 The objective of this final project were to design and implement a PID-controller, that would be able to control a Parrot Bebop 2 drone in the real lab environment. To accomplish this was it necessary to transform linear velocity in inertial coordinates into the UAVs body frames. Another objective in this project were to investigate the influence of the different controller parameter both individually and combined and plot the results. 
